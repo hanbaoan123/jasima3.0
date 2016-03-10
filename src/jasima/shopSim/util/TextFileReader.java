@@ -20,6 +20,13 @@
  *******************************************************************************/
 package jasima.shopSim.util;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
 import jasima.core.util.Pair;
 import jasima.core.util.Util;
 import jasima.shopSim.core.JobShop;
@@ -34,14 +41,8 @@ import jasima.shopSim.util.modelDef.ShopDef;
 import jasima.shopSim.util.modelDef.SourceDef;
 import jasima.shopSim.util.modelDef.StaticSourceDef;
 import jasima.shopSim.util.modelDef.WorkstationDef;
+import jasima.shopSim.util.modelDef.streams.DblConstDef;
 import jasima.shopSim.util.modelDef.streams.DblStreamDef;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * This class creates a {@link ShopDef} based on the contents of a text file.
@@ -51,8 +52,7 @@ import java.util.Map;
  * jasima.shopSim.models.mimac.
  * 
  * @author Torsten Hildebrandt
- * @version 
- *          "$Id$"
+ * @version "$Id$"
  */
 public class TextFileReader {
 
@@ -182,7 +182,16 @@ public class TextFileReader {
 				assert dat.length == 1 || dat.length == 3;
 
 				// parse processing time
-				od.setProcTime(Double.parseDouble(dat[0]));
+				DblStreamDef procTimes;
+				try {
+					double d = Double.parseDouble(dat[0]);
+					DblConstDef def = new DblConstDef();
+					def.setValues(new double[] { d });
+					procTimes = def;
+				} catch (NumberFormatException e) {
+					procTimes = DblStreamDef.parseDblStream(dat[0], null);
+				}
+				od.setProcTimes(procTimes);
 
 				od.setBatchFamily(WorkStation.BATCH_INCOMPATIBLE);
 				od.setMaxBatchSize(1);
@@ -227,8 +236,7 @@ public class TextFileReader {
 
 			int route = Integer.parseInt(i[0]);
 			if (route < 1 || route > numRoutes)
-				throw new IllegalArgumentException("Invalid route number "
-						+ route);
+				throw new IllegalArgumentException("Invalid route number " + route);
 			// adjust to zero-based route index
 			route--;
 
@@ -244,8 +252,7 @@ public class TextFileReader {
 
 		StaticSourceDef sd = new StaticSourceDef();
 		sd.setJobSpecs(jobs);
-		SourceDef[] as = Util.addToArray(data.getJobSources(), SourceDef.class,
-				sd);
+		SourceDef[] as = Util.addToArray(data.getJobSources(), SourceDef.class, sd);
 		data.setJobSources(as);
 
 		return Util.nextNonEmptyLine(r);
@@ -280,8 +287,7 @@ public class TextFileReader {
 		s = Util.nextNonEmptyLine(r);
 		iats = DblStreamDef.parseDblStream(s, errors);
 		if (errors.size() > 0)
-			throw new RuntimeException("parse error '" + s + "', "
-					+ Arrays.toString(errors.toArray()));
+			throw new RuntimeException("parse error '" + s + "', " + Arrays.toString(errors.toArray()));
 
 		s = Util.nextNonEmptyLine(r);
 		if (!"due_dates".equalsIgnoreCase(s))
@@ -289,8 +295,7 @@ public class TextFileReader {
 		s = Util.nextNonEmptyLine(r);
 		dueDates = DblStreamDef.parseDblStream(s, errors);
 		if (errors.size() > 0)
-			throw new RuntimeException("parse error '" + s + "', "
-					+ Arrays.toString(errors.toArray()));
+			throw new RuntimeException("parse error '" + s + "', " + Arrays.toString(errors.toArray()));
 
 		s = Util.nextNonEmptyLine(r);
 		if (!"weights".equalsIgnoreCase(s))
@@ -298,8 +303,7 @@ public class TextFileReader {
 		s = Util.nextNonEmptyLine(r);
 		weights = DblStreamDef.parseDblStream(s, errors);
 		if (errors.size() > 0)
-			throw new RuntimeException("parse error '" + s + "', "
-					+ Arrays.toString(errors.toArray()));
+			throw new RuntimeException("parse error '" + s + "', " + Arrays.toString(errors.toArray()));
 
 		s = Util.nextNonEmptyLine(r);
 
@@ -320,8 +324,7 @@ public class TextFileReader {
 		if (numJobs >= 0)
 			sd.setNumJobs(numJobs);
 
-		SourceDef[] as = Util.addToArray(data.getJobSources(), SourceDef.class,
-				sd);
+		SourceDef[] as = Util.addToArray(data.getJobSources(), SourceDef.class, sd);
 		data.setJobSources(as);
 
 		return s;
@@ -331,8 +334,7 @@ public class TextFileReader {
 		// setup times
 		String sm = Util.nextNonEmptyLine(r);
 		WorkstationDef ms = null;
-		while (sm != null && !JOB_SECT_MARKER.equalsIgnoreCase(sm)
-				&& !JOB_SECT_DYN_MARKER.equalsIgnoreCase(sm)) {
+		while (sm != null && !JOB_SECT_MARKER.equalsIgnoreCase(sm) && !JOB_SECT_DYN_MARKER.equalsIgnoreCase(sm)) {
 			if (SETUP_MATRIX_MARKER.equals(sm)) {
 				Map<Pair<String, String>, Double> matrix = readSetupMatrix(r);
 
@@ -362,8 +364,7 @@ public class TextFileReader {
 				ms.setName(name);
 			} else if (NUM_IN_GROUP_MARKER.equals(sm)) {
 				int inGroup = Integer.parseInt(Util.nextNonEmptyLine(r));
-				IndividualMachineDef[] im = Util.initializedArray(inGroup,
-						IndividualMachineDef.class);
+				IndividualMachineDef[] im = Util.initializedArray(inGroup, IndividualMachineDef.class);
 				ms.setMachines(im);
 			} else if (MACHINE_RELEASE_MARKER.equals(sm)) {
 				String[] ss = Util.nextNonEmptyLine(r).trim().split("\\s+");
@@ -382,20 +383,17 @@ public class TextFileReader {
 		return sm;
 	}
 
-	public static HashMap<Pair<String, String>, Double> readSetupMatrix(
-			BufferedReader r) throws IOException {
+	public static HashMap<Pair<String, String>, Double> readSetupMatrix(BufferedReader r) throws IOException {
 		int numStates = Integer.parseInt(Util.nextNonEmptyLine(r));
 		String[][] spec = Util.read2DimStrings(r, numStates);
 
 		HashMap<Pair<String, String>, Double> matrix = new HashMap<Pair<String, String>, Double>();
 		for (int n = 0; n < numStates; n++) {
 			for (int n2 = 0; n2 < numStates; n2++) {
-				Pair<String, String> pair = new Pair<String, String>(
-						spec[n][0], spec[n2][0]);
+				Pair<String, String> pair = new Pair<String, String>(spec[n][0], spec[n2][0]);
 
 				String s = spec[n][n2 + 1];
-				double val = !"x".equalsIgnoreCase(s) ? Double.parseDouble(s)
-						: 0.0d;
+				double val = !"x".equalsIgnoreCase(s) ? Double.parseDouble(s) : 0.0d;
 
 				matrix.put(pair, val);
 			}
