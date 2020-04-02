@@ -185,6 +185,8 @@ public class Simulation {
 
 	// the current simulation time.
 	private double simTime;
+	// 上一时刻仿真时间
+	private double lastSimTime;
 	private int currPrio;
 	private SimEvent currEvent;
 	private long numEventsProcessed;
@@ -195,6 +197,7 @@ public class Simulation {
 	// priorities
 	private int eventNum;
 	private boolean continueSim;
+	private boolean continueSimStep;
 	private int numAppEvents;
 
 	private SimExecState state;
@@ -218,7 +221,7 @@ public class Simulation {
 
 		events = createEventQueue();
 		// set to dummy event
-		currEvent = new SimEvent(Double.NEGATIVE_INFINITY, SimEvent.EVENT_PRIO_MIN) {
+		currEvent = new SimEvent(Double.NEGATIVE_INFINITY, SimEvent.EVENT_PRIO_MIN, "dummy event") {
 			@Override
 			public void handle() {
 			}
@@ -274,6 +277,8 @@ public class Simulation {
 		state = SimExecState.INIT;
 
 		simTime = getInitialSimTime();
+
+		lastSimTime = simTime;
 
 		initComponentTree(null, rootComponent);
 
@@ -359,6 +364,160 @@ public class Simulation {
 			state = SimExecState.FINISHED;
 		} finally {
 			simThread = null;
+		}
+	}
+
+	/**
+	 * Runs the main simulation loop by step. This means:
+	 * <ol>
+	 * <li>taking an event from the event queue,
+	 * <li>advancing simulation time, and
+	 * <li>triggering event processing.
+	 * </ol>
+	 * A simulation is terminated if either the maximum simulation length is
+	 * reached, there are no more application events in the queue, or some other
+	 * code called {@link #end()}.
+	 * <p>
+	 * Here one step means a decision point(e.g. new job arrivals or operation is
+	 * finished) to a decision point.
+	 * 
+	 * @see jasima.core.simulation.SimEvent#isAppEvent()
+	 */
+	public boolean runStep() {
+		checkState("run", state(), SimExecState.RUNNING);
+
+		// state = SimExecState.RUNNING;
+		// resetStats();
+
+		// simThread = Thread.currentThread();
+		try {
+			do {
+				// state = SimExecState.RUNNING;
+				continueSim = numAppEvents > 0;
+				continueSimStep = true;
+
+				checkInitialEventTime();
+
+				first: while (continueSim) { // outer loop so we can recover from errors
+					try {
+						second: while (continueSimStep) {
+							currEvent = events.extract();
+							// 判断是不是决策点事件,标准就是仍然是选择加工事件但是仿真时间不同
+							if (currEvent.getTime() > lastSimTime && currEvent.getDescription() != null
+									&& currEvent.getDescription().contains("选择加工")) {
+								continueSimStep = false;
+								events.insert(currEvent);
+								lastSimTime = currEvent.getTime();
+								break first;
+							}
+
+							// Advance clock to time of next event
+							simTime = currEvent.getTime();
+							currPrio = currEvent.getPrio();
+
+							currEvent.handle();
+
+							if (currEvent.isAppEvent()) {
+								if (--numAppEvents == 0) {
+									continueSim = false;
+									continueSimStep = false;
+								}
+
+							}
+
+							numEventsProcessed++;
+						}
+					} catch (Throwable t) {
+						boolean rethrow = handleError(t);
+
+						if (rethrow) {
+							state = SimExecState.ERROR;
+
+							if (t instanceof RuntimeException) {
+								throw (RuntimeException) t;
+							} else if (t instanceof Error) {
+								throw (Error) t;
+							} else
+								// can't occur
+								throw new AssertionError();
+						} else {
+							// do nothing
+						}
+					}
+				}
+			} while (pauseRequests.get() > 0);
+
+			return continueSim;
+			// state = SimExecState.FINISHED;
+		} finally {
+			simThread = null;
+		}
+	}
+
+	/**
+	 * 
+	 */
+	public void runInit() {
+		checkState("run", state(), SimExecState.BEFORE_RUN);
+
+		state = SimExecState.RUNNING;
+		resetStats();
+
+		simThread = Thread.currentThread();
+		try {
+			do {
+				continueSim = numAppEvents > 0;
+				continueSimStep = true;
+
+				checkInitialEventTime();
+
+				first: while (continueSim) { // outer loop so we can recover from errors
+					try {
+						second: while (continueSimStep) {
+							currEvent = events.extract();
+							// 当机床开始选择时或事件时间>0时说明初始化结束
+							if (currEvent.getTime() > 0 || (currEvent.getDescription() != null
+									&& currEvent.getDescription().contains("选择加工"))) {
+								events.insert(currEvent);
+								continueSimStep = false;
+								break first;
+							}
+							// Advance clock to time of next event
+							simTime = currEvent.getTime();
+							currPrio = currEvent.getPrio();
+
+							currEvent.handle();
+
+							if (currEvent.isAppEvent()) {
+								if (--numAppEvents == 0)
+									continueSim = false;
+							}
+
+							numEventsProcessed++;
+						}
+					} catch (Throwable t) {
+						boolean rethrow = handleError(t);
+
+						if (rethrow) {
+							state = SimExecState.ERROR;
+
+							if (t instanceof RuntimeException) {
+								throw (RuntimeException) t;
+							} else if (t instanceof Error) {
+								throw (Error) t;
+							} else
+								// can't occur
+								throw new AssertionError();
+						} else {
+							// do nothing
+						}
+					}
+				}
+			} while (pauseRequests.get() > 0);
+
+			// state = SimExecState.FINISHED;
+		} finally {
+			// simThread = null;
 		}
 	}
 
@@ -463,7 +622,7 @@ public class Simulation {
 	 * <p>
 	 * It should contain code to initialize statistics variables.
 	 */
-	protected void resetStats() {
+	public void resetStats() {
 		checkState("resetStats", state(), SimExecState.RUNNING);
 
 		// schedule statistics reset
@@ -473,6 +632,14 @@ public class Simulation {
 
 		// call once for each run
 		rootComponent.resetStats();
+	}
+
+	public SimExecState getState() {
+		return state;
+	}
+
+	public void setState(SimExecState state) {
+		this.state = state;
 	}
 
 	/**

@@ -63,8 +63,8 @@ public class WorkStation extends SimComponentBase {
 
 		// constants for default events thrown by a workstation
 
-		public static final WorkStationMessage WS_ACTIVATED = new WorkStationMessage("WS_JOB_ARRIVAL");
-		public static final WorkStationMessage WS_DEACTIVATED = new WorkStationMessage("WS_JOB_ARRIVAL");
+		public static final WorkStationMessage WS_ACTIVATED = new WorkStationMessage("WS_ACTIVATED");
+		public static final WorkStationMessage WS_DEACTIVATED = new WorkStationMessage("WS_DEACTIVATED");
 		public static final WorkStationMessage WS_JOB_ARRIVAL = new WorkStationMessage("WS_JOB_ARRIVAL");
 		public static final WorkStationMessage WS_JOB_SELECTED = new WorkStationMessage("WS_JOB_SELECTED");
 		public static final WorkStationMessage WS_JOB_COMPLETED = new WorkStationMessage("WS_JOB_COMPLETED");
@@ -89,34 +89,77 @@ public class WorkStation extends SimComponentBase {
 	public static final int ACTIVATE_PRIO = DEPART_PRIO - 1000; // before depart
 
 	// parameters
-
+	/**
+	 * 工作站名称
+	 */
 	private String name;
+	/**
+	 * 机床数量
+	 */
 	private final int numInGroup;
+	/**
+	 * 机床数组
+	 */
 	private final IndividualMachine[] machDat;
+	/**
+	 * 准备时间矩阵
+	 */
 	private double[][] setupMatrix = { { 0.0 } };
-
+	/**
+	 * 合批
+	 */
 	private BatchForming batchForming;
+	/**
+	 * 批次排序规则
+	 */
 	private PR batchSequencingRule;
-
+	/**
+	 * 队列
+	 */
 	public final PriorityQueue<Job> queue;
-
+	/**
+	 * 车间对象
+	 */
 	protected Shop shop;
+	/**
+	 * 在shop.machines中的索引
+	 */
 	protected int index; // in shop.machines
-
+	/**
+	 * 机床繁忙数
+	 */
 	private int numBusy;
+	/**
+	 * 当前队列中未来到达数
+	 */
 	private int numFutures; // number of future arrivals currently in queue
-
+	/**
+	 * 是否使用批量
+	 */
 	private boolean batchingUsed;
 
 	// which machine in this group currently selects its next batch? This
 	// information is important if, e.g., dispatching rules have to determine a
 	// specific machine's setup state
+	/**
+	 * 当前该组中的哪台机器选择下一批?如果调度规则必须确定特定机床的准备状态，则此信息非常重要
+	 */
 	public IndividualMachine currMachine;
-
+	/**
+	 * 空闲机床
+	 */
 	ArrayDeque<IndividualMachine> freeMachines;
-
+	/**
+	 * 真实加工工时和未来加工工时
+	 */
 	protected double workContentReal, workContentFuture;
+	/**
+	 * 准备状态翻译，即将字符串形式的状态转换为对应的整数
+	 */
 	private ArrayList<String> setupStateTranslate;
+	/**
+	 * 批次和工件列表的map
+	 */
 	private Map<String, List<Job>> jobsPerBatchFamily;
 
 	// the following fields temporarily contain parameters used by listeners
@@ -126,6 +169,7 @@ public class WorkStation extends SimComponentBase {
 	public int oldSetupState;
 	public int newSetupState;
 	public double setupTime;
+	public double queueLen;
 
 	public WorkStation() {
 		this(1);
@@ -342,10 +386,12 @@ public class WorkStation extends SimComponentBase {
 
 		double tCompl = simTime + op.getProcTime() + setupTime;
 		currMachine.onDepart.setTime(tCompl);
+		currMachine.onDepart.setDescription(batch + "离开机床" + currMachine);
 		currMachine.procFinished = tCompl;
 		currMachine.procStarted = simTime;
 		currMachine.curJob = batch;
 		getSim().schedule(currMachine.onDepart);
+		System.out.println(batch + ":" + currMachine + ":" + simTime + "-" + tCompl);
 
 		notifyJobsOfProcStart(batch);
 
@@ -409,7 +455,7 @@ public class WorkStation extends SimComponentBase {
 	 */
 	public void selectAndStart() {
 		// execute asynchronously so all jobs arrived/departed before selection
-		getSim().schedule(shop.simTime(), SELECT_PRIO, this::selectAndStart0);
+		getSim().schedule(this + "从队列中选择加工", shop.simTime(), SELECT_PRIO, this::selectAndStart0);
 	}
 
 	protected void selectAndStart0() {

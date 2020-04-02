@@ -62,19 +62,47 @@ public class Shop extends SimComponentContainerBase<SimComponent> {
 	}
 
 	// parameters
+	/**
+	 * 系统内最大作业数
+	 */
 	private int maxJobsInSystem = 0;
+	/**
+	 * 多少作业完成后停止
+	 */
 	private int stopAfterNumJobs = 0;
+	/**
+	 * 前瞻
+	 */
 	private boolean enableLookAhead = false;
-
+	/**
+	 * 投料源
+	 */
 	private SimComponentContainerBase<JobSource> sources;
+	/**
+	 * 机床
+	 */
 	private SimComponentContainerBase<WorkStation> machines;
+	/**
+	 * 工艺
+	 */
 	public Route[] routes = {};
-
+	/**
+	 * 完成作业数
+	 */
 	public int jobsFinished;
+	/**
+	 * 开始作业数
+	 */
 	public int jobsStarted;
 
 	// fields used during event notification
+	/**
+	 * 释放的上一作业
+	 */
 	public Job lastJobReleased;
+	/**
+	 * 完成的上一作业
+	 */
 	public Job lastJobFinished;
 
 	public Shop() {

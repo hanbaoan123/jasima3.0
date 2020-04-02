@@ -59,31 +59,80 @@ public class Job extends PrioRuleTarget implements Cloneable, ValueStore, Notifi
 		public static final JobMessage JOB_END_OPERATION = new JobMessage("JOB_END_OPERATION");
 	}
 
+	/**
+	 * 车间
+	 */
 	private final Shop shop;
 	// delegate Notifier functionality
 	private NotifierImpl<Job, Object> notifierAdapter;
 	// delegate ValueStore functionality
 	private ValueStoreImpl valueStore;
-
+	/**
+	 * 达到时间
+	 */
 	private double arriveTime; // arrival time at current machine
+	/**
+	 * 当前工作站
+	 */
 	private WorkStation currMachine;
 	// when will job finish processing on its current machine (if started)
+	/**
+	 * 开始时间
+	 */
 	private double startTime;
+	/**
+	 * 完成时间
+	 */
 	private double finishTime;
 	private double relDate;
+	/**
+	 * 交货期
+	 */
 	private double dueDate;
+	/**
+	 * 作业数
+	 */
 	private int jobNum; // global number of job in system
+	/**
+	 * 作业类型
+	 */
 	private int jobType;
+	/**
+	 * 权重
+	 */
 	private double weight = 1.0d;
+	/**
+	 * 用于定位当前工序的任务号
+	 */
 	private int taskNumber; // current operation
+	/**
+	 * 工序数组
+	 */
 	private Operation[] ops;
+	/**
+	 * 工序交货期数组
+	 */
 	private double[] opDueDates;
+	/**
+	 * 是否是未来作业
+	 */
 	private boolean isFuture = false;
+	/**
+	 * 名称
+	 */
 	private String name = null;
+	/**
+	 * 工艺路线
+	 */
 	private Route route = null;
 	// we cache the value returned by remainingProcTime()
+	/**
+	 * 剩余加工时间
+	 */
 	private double remProcTime = -1.0d;
-
+	/**
+	 * 未来作业
+	 */
 	private Job future;
 
 	public Job(Shop shop) {

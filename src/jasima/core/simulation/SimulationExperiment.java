@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.function.Consumer;
 
 import jasima.core.experiment.Experiment;
+import jasima.core.experiment.Experiment.ExperimentMessage;
+import jasima.core.simulation.Simulation.SimExecState;
 import jasima.core.simulation.Simulation.SimPrintMessage;
 import jasima.core.util.MsgCategory;
 
@@ -50,6 +52,56 @@ public class SimulationExperiment extends Experiment {
 		// call initActions
 		if (initActions != null) {
 			initActions.forEach(a -> a.accept(sim));
+		}
+	}
+
+	/**
+	 * 初始化实验(每次强化学习运行一次)
+	 * 
+	 * @return
+	 */
+	public void initExperiment() {
+		try {
+			// runTimeReal = System.currentTimeMillis();
+
+			if (numListener() > 0)
+				fire(ExperimentMessage.EXPERIMENT_STARTING);
+
+			super.init();
+
+			sim = createSim();
+
+			initSim();
+
+			createSimComponents();
+		} finally {
+			// runTimeReal = System.currentTimeMillis() - runTimeReal;
+		}
+	}
+
+	/**
+	 * 重置实验（每个片段运行一次）
+	 */
+	public void resetExperiment() {
+		try {
+			runTimeReal = System.currentTimeMillis();
+			sim.setState(SimExecState.INITIAL);
+
+			if (numListener() > 0)
+				fire(ExperimentMessage.EXPERIMENT_STARTING);
+			sim.init();
+
+			if (numListener() > 0)
+				fire(ExperimentMessage.EXPERIMENT_INITIALIZED);
+
+			beforeRun();
+			if (numListener() > 0)
+				fire(ExperimentMessage.EXPERIMENT_BEFORE_RUN);
+			// 这个地方应该先运行完投料和机床初始化
+			sim.runInit();
+
+		} finally {
+			// runTimeReal = System.currentTimeMillis() - runTimeReal;
 		}
 	}
 

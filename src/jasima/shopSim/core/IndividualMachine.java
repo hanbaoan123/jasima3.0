@@ -32,26 +32,58 @@ import jasima.core.simulation.SimEvent;
  * @author Torsten Hildebrandt
  */
 public class IndividualMachine {
-
+	/**
+	 * 机床的三种状态：故障、空闲和繁忙
+	 * 
+	 * @author hba
+	 *
+	 */
 	public enum MachineState {
 		DOWN, IDLE, WORKING
 	}
 
+	/**
+	 * 工作站
+	 */
 	public final WorkStation workStation; // the workstation this machine
-											// belongs to
+	/**
+	 * 在工作站中的索引
+	 */
 	public final int idx; // index in workStation.machDat
 
 	public double relDate;
+	/**
+	 * 初始准备状态
+	 */
 	public int initialSetup;
+	/**
+	 * 机床名称
+	 */
 	public String name = null;
-
+	/**
+	 * 故障源
+	 */
 	@SuppressWarnings("unchecked")
 	public List<? extends DowntimeSource> downsources = Collections.EMPTY_LIST;
-
+	/**
+	 * 机床状态
+	 */
 	public MachineState state;
+	/**
+	 * 故障原因
+	 */
 	public DowntimeSource downReason;
+	/**
+	 * 开始加工时间
+	 */
 	public double procStarted;
+	/**
+	 * 结束加工时间
+	 */
 	public double procFinished;
+	/**
+	 * 准备状态
+	 */
 	public int setupState;
 	public PrioRuleTarget curJob;
 
@@ -66,7 +98,7 @@ public class IndividualMachine {
 	}
 
 	// called whenever an operation is finished
-	SimEvent onDepart = new SimEvent(0.0d, WorkStation.DEPART_PRIO) {
+	SimEvent onDepart = new SimEvent(0.0d, WorkStation.DEPART_PRIO, "depart") {
 		@Override
 		public void handle() {
 			workStation.currMachine = IndividualMachine.this;
@@ -91,12 +123,11 @@ public class IndividualMachine {
 	}
 
 	/**
-	 * Machine going down for a certain amount of time. If this machine is
-	 * already down or currently processing, this operation is finished before
-	 * the new downtime can become active.
+	 * Machine going down for a certain amount of time. If this machine is already
+	 * down or currently processing, this operation is finished before the new
+	 * downtime can become active.
 	 * 
-	 * @param downReason
-	 *            The {@link DowntimeSource} causing the shutdown.
+	 * @param downReason The {@link DowntimeSource} causing the shutdown.
 	 */
 	public void takeDown(final DowntimeSource downReason) {
 		final Shop shop = workStation.shop();

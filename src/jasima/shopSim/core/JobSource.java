@@ -51,7 +51,7 @@ public abstract class JobSource extends SimComponentBase {
 		stopArrivals = false;
 		jobsStarted = 0;
 
-		SimEvent arriveEvent = new SimEvent(0.0d, ARRIVE_PRIO) {
+		SimEvent arriveEvent = new SimEvent(0.0d, ARRIVE_PRIO, "投料") {
 
 			private Job nextJob; // next job to be released
 
@@ -73,6 +73,7 @@ public abstract class JobSource extends SimComponentBase {
 				}
 
 				// release "nextJob"
+				// 这里所谓的nextJob其实就是当前事件处理中所涉及的作业
 				if (nextJob != null) {
 					getShop().startJob(nextJob);
 				}
@@ -90,8 +91,7 @@ public abstract class JobSource extends SimComponentBase {
 	public abstract Job createNextJob();
 
 	/**
-	 * Factory method used in {@link #createNextJob()} to create a new job
-	 * instance.
+	 * Factory method used in {@link #createNextJob()} to create a new job instance.
 	 * 
 	 * @return The new {@link Job} instance.
 	 */

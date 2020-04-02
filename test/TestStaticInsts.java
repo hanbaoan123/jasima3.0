@@ -51,6 +51,7 @@ import jasima.shopSim.prioRules.upDownStream.PTPlusWINQPlusNPT;
 import jasima.shopSim.prioRules.upDownStream.WINQ;
 import jasima.shopSim.prioRules.upDownStream.XWINQ;
 import jasima.shopSim.prioRules.weighted.WSPT;
+import jasima.shopSim.util.MachineStatCollector;
 import util.Bremen1;
 import util.Bremen2;
 import util.ExtendedJobStatCollector;
@@ -69,12 +70,12 @@ public class TestStaticInsts {
 
 	@Test
 	public void test_js10x10_2() throws Exception {
-		testFromFile("testInstances/js10x10.txt", rules);
+		// testFromFile("testInstances/js10x10.txt", rules);
 	}
 
 	@Test
 	public void test_js20x05_2() throws Exception {
-		testFromFile("testInstances/js20x05.txt", rules);
+		// testFromFile("testInstances/js20x05.txt", rules);
 	}
 
 	public static void testFromFile(String fileName, PR[] rules) throws Exception {
@@ -84,14 +85,19 @@ public class TestStaticInsts {
 		assertArrayEquals("simulation results", exp, res);
 	}
 
-	static PR[] rules = new PR[] { new IgnoreFutureJobs(new SPT()), new IgnoreFutureJobs(new FCFS()),
-			new IgnoreFutureJobs(new PTPlusWINQPlusNPT()), new IgnoreFutureJobs(new WINQ()),
-			new IgnoreFutureJobs(new Inverse(new FCFS())), new IgnoreFutureJobs(new Inverse(new SPT())),
-			new IgnoreFutureJobs(new WSPT()), new IgnoreFutureJobs(new Inverse(new WSPT())),
-			new IgnoreFutureJobs(new EDD()), new IgnoreFutureJobs(new FASFS()), new IgnoreFutureJobs(new SLK()),
-			new IgnoreFutureJobs(new Inverse(new CR())), new IgnoreFutureJobs(new Inverse(new CR.Variant1())),
-			new IgnoreFutureJobs(new Inverse(new CR.Variant2())), new IgnoreFutureJobs(new ATC(1.0)), new Bremen1(),
-			new Bremen2(), new IgnoreFutureJobs(new IFTMinusUITPlusNPT()), new XWINQ() };
+	static PR[] rules = new PR[] { new IgnoreFutureJobs(
+			new SPT())/*
+						 * , new IgnoreFutureJobs(new FCFS()), new IgnoreFutureJobs(new
+						 * PTPlusWINQPlusNPT()), new IgnoreFutureJobs(new WINQ()), new
+						 * IgnoreFutureJobs(new Inverse(new FCFS())), new IgnoreFutureJobs(new
+						 * Inverse(new SPT())), new IgnoreFutureJobs(new WSPT()), new
+						 * IgnoreFutureJobs(new Inverse(new WSPT())), new IgnoreFutureJobs(new EDD()),
+						 * new IgnoreFutureJobs(new FASFS()), new IgnoreFutureJobs(new SLK()), new
+						 * IgnoreFutureJobs(new Inverse(new CR())), new IgnoreFutureJobs(new Inverse(new
+						 * CR.Variant1())), new IgnoreFutureJobs(new Inverse(new CR.Variant2())), new
+						 * IgnoreFutureJobs(new ATC(1.0)), new Bremen1(), new Bremen2(), new
+						 * IgnoreFutureJobs(new IFTMinusUITPlusNPT()), new XWINQ()
+						 */ };
 
 	public static String[] test(String fn, PR[] rules) throws Exception {
 		ArrayList<String> res = new ArrayList<String>();
@@ -114,7 +120,7 @@ public class TestStaticInsts {
 		shopExperiment
 				.setSequencingRule(sr.clone().setFinalTieBreaker(new FCFS()).setFinalTieBreaker(new TieBreakerFASFS()));
 		shopExperiment.addShopListener(new ExtendedJobStatCollector());
-
+		shopExperiment.addMachineListener(new MachineStatCollector());
 		return shopExperiment;
 	}
 
@@ -125,6 +131,7 @@ public class TestStaticInsts {
 		res.add(formatValueStat(prefix, (SummaryStat) expRes.get("flowMean")));
 		res.add(formatValueStat(prefix, (SummaryStat) expRes.get("tardMean")));
 		res.add(formatValueStat(prefix, (SummaryStat) expRes.get("lateMean")));
+		res.add(formatValueStat(prefix, (SummaryStat) expRes.get("m0.qLen")));
 	}
 
 	private static String formatValueStat(String prefix, SummaryStat stat) {

@@ -192,7 +192,7 @@ public abstract class Experiment
 
 	// fields used during run
 	private transient int nestingLevel = 0;
-	private transient long runTimeReal;
+	public transient long runTimeReal;
 	protected transient int aborted;
 	protected Map<String, Object> resultMap;
 

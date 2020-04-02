@@ -63,6 +63,7 @@ public class ExtendedJobStatCollector extends ShopListenerBase {
 	private SummaryStat weightedTardinessWithWIP;
 	private double numTardyWeighted;
 	private Shop shop;
+	private double cMax;
 
 	public ExtendedJobStatCollector() {
 		super();
@@ -77,7 +78,7 @@ public class ExtendedJobStatCollector extends ShopListenerBase {
 		conditionalTardiness = new SummaryStat("conditionalTardiness");
 		weightedConditionalTardiness = new SummaryStat("weightedConditionalTardiness");
 		numTardyWeighted = 0.0;
-
+		cMax = 0.0;
 		shop = null;
 	}
 
@@ -100,8 +101,8 @@ public class ExtendedJobStatCollector extends ShopListenerBase {
 	}
 
 	/**
-	 * Updates statistics after simulation ended with data from a job that is
-	 * still processed on the shop floor.
+	 * Updates statistics after simulation ended with data from a job that is still
+	 * processed on the shop floor.
 	 */
 	protected void storeWIPJob(PrioRuleTarget job) {
 		for (int i = 0; i < job.numJobsInBatch(); i++) {
@@ -125,7 +126,8 @@ public class ExtendedJobStatCollector extends ShopListenerBase {
 	public void jobFinished(Shop shop, Job j) {
 		if (!shouldCollect(j))
 			return;
-
+		assert shop.simTime() >= cMax;
+		cMax = shop.simTime();
 		double ft = shop.simTime() - j.getRelDate();
 		weightedFlowtime.value(j.getWeight() * ft);
 
@@ -154,7 +156,7 @@ public class ExtendedJobStatCollector extends ShopListenerBase {
 		put(res, weightedTardinessWithWIP);
 		put(res, conditionalTardiness);
 		put(res, weightedConditionalTardiness);
-
+		res.put("cMax", cMax);
 		res.put("weightedNumTardy", numTardyWeighted);
 	}
 
