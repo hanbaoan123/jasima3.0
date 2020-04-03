@@ -391,7 +391,7 @@ public class WorkStation extends SimComponentBase {
 		currMachine.procStarted = simTime;
 		currMachine.curJob = batch;
 		getSim().schedule(currMachine.onDepart);
-		System.out.println(batch + ":" + currMachine + ":" + simTime + "-" + tCompl);
+		// System.out.println(batch + ":" + currMachine + ":" + simTime + "-" + tCompl);
 
 		notifyJobsOfProcStart(batch);
 
@@ -413,8 +413,8 @@ public class WorkStation extends SimComponentBase {
 		currMachine.curJob = null;
 
 		currMachine.state = MachineState.IDLE;
-		currMachine.procFinished = -1.0d;
-		currMachine.procStarted = -1.0d;
+		// currMachine.procFinished = -1.0d;
+		// currMachine.procStarted = -1.0d;
 		freeMachines.addFirst(currMachine);
 
 		numBusy--;

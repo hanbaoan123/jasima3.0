@@ -67,7 +67,7 @@ import jasima.core.util.Util;
  * 
  * @author Torsten Hildebrandt
  */
-public class Simulation {
+public class Simulation2 {
 
 	// constants for simTimeToMillisFactor used to convert simTime to an Instant
 	public static final long MILLIS_PER_MINUTE = 60 * 1000;
@@ -91,23 +91,23 @@ public class Simulation {
 
 		private static final Object[] EMPTY = new Object[0];
 
-		private final Simulation sim;
+		private final Simulation2 sim;
 		private final MsgCategory category;
 		private final double simTime;
 		private final Object[] params;
 		private String message;
 
-		public SimPrintMessage(Simulation sim, MsgCategory category, String message) {
+		public SimPrintMessage(Simulation2 sim, MsgCategory category, String message) {
 			this(sim, category, message, EMPTY);
 			Objects.requireNonNull(message);
 		}
 
-		public SimPrintMessage(Simulation sim, MsgCategory category, Object... params) {
+		public SimPrintMessage(Simulation2 sim, MsgCategory category, Object... params) {
 			this(sim, category, null, params);
 			Objects.requireNonNull(params);
 		}
 
-		protected SimPrintMessage(Simulation sim, MsgCategory category, String msg, Object... params) {
+		protected SimPrintMessage(Simulation2 sim, MsgCategory category, String msg, Object... params) {
 			super();
 			this.sim = sim;
 			this.simTime = sim.simTime();
@@ -117,7 +117,7 @@ public class Simulation {
 			this.message = msg;
 		}
 
-		public Simulation getSim() {
+		public Simulation2 getSim() {
 			return sim;
 		}
 
@@ -206,7 +206,7 @@ public class Simulation {
 	private AtomicInteger pauseRequests;
 	private Thread simThread;
 
-	public Simulation() {
+	public Simulation2() {
 		super();
 
 		pauseHelper = new Semaphore(1, true);
@@ -395,7 +395,6 @@ public class Simulation {
 				// state = SimExecState.RUNNING;
 				continueSim = numAppEvents > 0;
 				continueSimStep = true;
-				boolean depart = false;
 
 				checkInitialEventTime();
 
@@ -403,22 +402,17 @@ public class Simulation {
 					try {
 						second: while (continueSimStep) {
 							currEvent = events.extract();
-							// 判断是不是决策点事件,标准就是机床加工完成且后续事件仿真时间增加时为止
-							if (currEvent.getDescription() != null && currEvent.getDescription().contains("离开")) {
-								// 表示已经发生加工完成事件
-								depart = true;
+							// 判断是不是决策点事件,标准就是仍然是选择加工事件但是仿真时间不同
+							if (currEvent.getTime() > lastSimTime && currEvent.getDescription() != null
+									&& currEvent.getDescription().contains("选择加工")) {
+								continueSimStep = false;
+								events.insert(currEvent);
+								simTime = currEvent.getTime();
+								// 放在外面赋值
+								// lastSimTime = currEvent.getTime();
+								break first;
 							}
-							if (depart) {
-								// 如果已经发生加工完成事件，则再判断事件时间是否发生变化
-								if (currEvent.getTime() > lastSimTime) {
-									continueSimStep = false;
-									events.insert(currEvent);
-									simTime = currEvent.getTime();
-									// 放在外面赋值
-									// lastSimTime = currEvent.getTime();
-									break first;
-								}
-							}
+
 							// Advance clock to time of next event
 							simTime = currEvent.getTime();
 							currPrio = currEvent.getPrio();
@@ -1399,7 +1393,7 @@ public class Simulation {
 	}
 
 	@Override
-	protected Simulation clone() throws CloneNotSupportedException {
+	protected Simulation2 clone() throws CloneNotSupportedException {
 		throw new CloneNotSupportedException(); // not implemented yet
 	}
 
