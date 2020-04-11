@@ -50,6 +50,9 @@ import jasima.core.util.ConsolePrinter;
 import jasima.core.util.MsgCategory;
 import jasima.core.util.TraceFileProducer;
 import jasima.core.util.Util;
+import jasima.shopSim.core.PR;
+import jasima.shopSim.core.Shop;
+import jasima.shopSim.core.WorkStation;
 
 /**
  * Base class for a discrete event simulation. This class doesn't do much, but
@@ -180,8 +183,17 @@ public class Simulation {
 
 	private MsgCategory printLevel = MsgCategory.INFO;
 	private ArrayList<Consumer<SimPrintMessage>> printListener;
+	private PR[] jobSequencingRules;
 
 	// ////////////// attributes/fields used during a simulation
+
+	public PR[] getJobSequencingRules() {
+		return jobSequencingRules;
+	}
+
+	public void setJobSequencingRules(PR[] jobSequencingRules) {
+		this.jobSequencingRules = jobSequencingRules;
+	}
 
 	// the current simulation time.
 	private double simTime;
@@ -381,11 +393,19 @@ public class Simulation {
 	 * Here one step means a decision point(e.g. new job arrivals or operation is
 	 * finished) to a decision point.
 	 * 
+	 * @param action
+	 * 
 	 * @see jasima.core.simulation.SimEvent#isAppEvent()
 	 */
-	public boolean runStep() {
+	public boolean runStep(Integer action) {
 		checkState("run", state(), SimExecState.RUNNING);
 
+		Shop shop = (Shop) this.getRootComponent().getComponent(0);
+		PR sr = jobSequencingRules[action];
+
+		for (WorkStation workStation : shop.getMachines()) {
+			workStation.queue.setSequencingRule(sr);
+		}
 		// state = SimExecState.RUNNING;
 		// resetStats();
 
@@ -454,7 +474,7 @@ public class Simulation {
 			return continueSim;
 			// state = SimExecState.FINISHED;
 		} finally {
-			simThread = null;
+			// simThread = null;
 		}
 	}
 

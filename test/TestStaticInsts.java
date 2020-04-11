@@ -85,19 +85,14 @@ public class TestStaticInsts {
 		assertArrayEquals("simulation results", exp, res);
 	}
 
-	static PR[] rules = new PR[] { new IgnoreFutureJobs(
-			new SPT())/*
-						 * , new IgnoreFutureJobs(new FCFS()), new IgnoreFutureJobs(new
-						 * PTPlusWINQPlusNPT()), new IgnoreFutureJobs(new WINQ()), new
-						 * IgnoreFutureJobs(new Inverse(new FCFS())), new IgnoreFutureJobs(new
-						 * Inverse(new SPT())), new IgnoreFutureJobs(new WSPT()), new
-						 * IgnoreFutureJobs(new Inverse(new WSPT())), new IgnoreFutureJobs(new EDD()),
-						 * new IgnoreFutureJobs(new FASFS()), new IgnoreFutureJobs(new SLK()), new
-						 * IgnoreFutureJobs(new Inverse(new CR())), new IgnoreFutureJobs(new Inverse(new
-						 * CR.Variant1())), new IgnoreFutureJobs(new Inverse(new CR.Variant2())), new
-						 * IgnoreFutureJobs(new ATC(1.0)), new Bremen1(), new Bremen2(), new
-						 * IgnoreFutureJobs(new IFTMinusUITPlusNPT()), new XWINQ()
-						 */ };
+	static PR[] rules = new PR[] { new IgnoreFutureJobs(new SPT()), new IgnoreFutureJobs(new FCFS()),
+			new IgnoreFutureJobs(new PTPlusWINQPlusNPT()), new IgnoreFutureJobs(new WINQ()),
+			new IgnoreFutureJobs(new Inverse(new FCFS())), new IgnoreFutureJobs(new Inverse(new SPT())),
+			new IgnoreFutureJobs(new WSPT()), new IgnoreFutureJobs(new Inverse(new WSPT())),
+			new IgnoreFutureJobs(new EDD()), new IgnoreFutureJobs(new FASFS()), new IgnoreFutureJobs(new SLK()),
+			new IgnoreFutureJobs(new Inverse(new CR())), new IgnoreFutureJobs(new Inverse(new CR.Variant1())),
+			new IgnoreFutureJobs(new Inverse(new CR.Variant2())), new IgnoreFutureJobs(new ATC(1.0)), new Bremen1(),
+			new Bremen2(), new IgnoreFutureJobs(new IFTMinusUITPlusNPT()), new XWINQ() };
 
 	public static String[] test(String fn, PR[] rules) throws Exception {
 		ArrayList<String> res = new ArrayList<String>();

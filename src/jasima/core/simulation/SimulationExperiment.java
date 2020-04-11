@@ -13,6 +13,7 @@ import jasima.core.experiment.Experiment.ExperimentMessage;
 import jasima.core.simulation.Simulation.SimExecState;
 import jasima.core.simulation.Simulation.SimPrintMessage;
 import jasima.core.util.MsgCategory;
+import jasima.shopSim.core.PR;
 
 public class SimulationExperiment extends Experiment {
 
@@ -27,7 +28,18 @@ public class SimulationExperiment extends Experiment {
 	private Instant simTimeStartInstant = null; // beginning of current year will be used if not set explicitly
 	private ArrayList<Consumer<Simulation>> initActions = null;
 	private SimComponent rootComponent = null;
+	/**
+	 * 可选规则集合，用于强化学习选择
+	 */
+	private PR[] jobSequencingRules;
 
+	public PR[] getJobSequencingRules() {
+		return jobSequencingRules;
+	}
+
+	public void setJobSequencingRules(PR[] jobSequencingRules) {
+		this.jobSequencingRules = jobSequencingRules;
+	}
 	// fields used during run
 
 	protected transient Simulation sim;
@@ -156,17 +168,17 @@ public class SimulationExperiment extends Experiment {
 	}
 
 	@Override
-	protected void afterRun() {
+	public void afterRun() {
 		sim.afterRun();
 	}
 
 	@Override
-	protected void done() {
+	public void done() {
 		sim.done();
 	}
 
 	@Override
-	protected void produceResults() {
+	public void produceResults() {
 		super.produceResults();
 
 		sim.produceResults(resultMap);

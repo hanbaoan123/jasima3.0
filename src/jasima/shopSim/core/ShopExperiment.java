@@ -89,6 +89,10 @@ public abstract class ShopExperiment extends SimulationExperiment {
 		shop.setStopAfterNumJobs(getStopAfterNumJobs());
 		shop.setEnableLookAhead(isEnableLookAhead());
 
+		// 设置仿真的规则集合
+		if (getJobSequencingRules() != null) {
+			sim.setJobSequencingRules(getJobSequencingRules());
+		}
 		// set dispatching rule of machines
 		for (int i = 0, n = shop.machines().numComponents(); i < n; i++) {
 			WorkStation m = shop.machines().getComponent(i);
@@ -173,7 +177,7 @@ public abstract class ShopExperiment extends SimulationExperiment {
 	}
 
 	@Override
-	protected void done() {
+	public void done() {
 		super.done();
 
 		int wip = shop.jobsStarted - shop.jobsFinished;

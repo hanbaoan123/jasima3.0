@@ -194,7 +194,7 @@ public abstract class Experiment
 	private transient int nestingLevel = 0;
 	public transient long runTimeReal;
 	protected transient int aborted;
-	protected Map<String, Object> resultMap;
+	public Map<String, Object> resultMap;
 
 	public static class UniqueNamesCheckingHashMap extends LinkedHashMap<String, Object> {
 		private static final long serialVersionUID = -6783419937586790463L;
