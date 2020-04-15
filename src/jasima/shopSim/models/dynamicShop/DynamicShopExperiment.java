@@ -213,7 +213,7 @@ public class DynamicShopExperiment extends ShopExperiment {
 	}
 
 	@Override
-	protected void done() {
+	public void done() {
 		// was simulation stopped early?
 		aborted = (shop.jobsStarted - shop.jobsFinished) > 0 ? 1 : 0;
 

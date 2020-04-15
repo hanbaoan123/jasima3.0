@@ -28,6 +28,7 @@ public class SimulationExperiment extends Experiment {
 	private Instant simTimeStartInstant = null; // beginning of current year will be used if not set explicitly
 	private ArrayList<Consumer<Simulation>> initActions = null;
 	private SimComponent rootComponent = null;
+	private Boolean writeDynamic = false;
 	/**
 	 * 可选规则集合，用于强化学习选择
 	 */
@@ -289,6 +290,14 @@ public class SimulationExperiment extends Experiment {
 		}
 
 		return c;
+	}
+
+	public Boolean getWriteDynamic() {
+		return writeDynamic;
+	}
+
+	public void setWriteDynamic(Boolean writeDynamic) {
+		this.writeDynamic = writeDynamic;
 	}
 
 }
